@@ -5,9 +5,10 @@ import (
 )
 
 func main() {
-	choices := []string{"pods", "services", "deployments"}
+	//choices := []string{"pods", "services", "deployments"}
 	p := tea.NewProgram(
-		newkubeInterface(choices, 0, -1),
+		//newKubeInterface(choices, 0, -1),
+		newViewController(),
 	)
 
 	if err := p.Start(); err != nil {
