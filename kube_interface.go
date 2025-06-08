@@ -4,25 +4,29 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Defining our model
 type kubeInterface struct {
-	choices  []string
-	cursor   int
-	selected int // Choosing 1 at a time, the selected would be the index of the choices list
+	choices   []string
+	cursor    int
+	selected  int // Choosing 1 at a time, the selected would be the index of the choices list
+	clientset *kubernetes.Clientset
 }
 
-func newKubeInterface(choices []string, cursor int, selected int) kubeInterface {
+func newKubeInterface(choices []string, cursor int, selected int, clientset *kubernetes.Clientset) kubeInterface {
 	return kubeInterface{
-		choices:  choices,
-		cursor:   cursor,
-		selected: selected,
+		choices:   choices,
+		cursor:    cursor,
+		selected:  selected,
+		clientset: clientset,
 	}
 }
 
-func (k kubeInterface) Init() tea.Cmd {
+func (k *kubeInterface) Init() tea.Cmd {
 	// Just return `nil`, which means "no I/O right now"
+
 	return nil
 }
 
@@ -31,11 +35,11 @@ func (k kubeInterface) Init() tea.Cmd {
 //
 //		We look at the model in its current state and use it to return a string. That string is the UI
 //	 Because the view describes the entire UI of your application, you don’t have to worry about redrawing logic and stuff like that. Bubble Tea takes care of it
-func (k kubeInterface) View() string {
+func (k *kubeInterface) View() string {
 	return k.renderMainView()
 }
 
-func (k kubeInterface) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (k *kubeInterface) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
 	case tea.KeyMsg:
 		switch msg.(tea.KeyMsg).String() {
@@ -52,9 +56,12 @@ func (k kubeInterface) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				//fmt.Println(k.selected)
 			}
 		case "enter":
-			// selected := k.cursor
-			// fmt.Println(selected)
-			return newPodView("").Update(msg) //tea.Cmd Would want this to execute whatever command the users wants at that specific cursor ex) at 1, show cluster services
+			if k.cursor == 0 {
+				return k, func() tea.Msg {
+					return switchViewMessage{newView: newPodView(k.clientset)}
+				}
+			}
+			//tea.Cmd Would want this to execute whatever command the users wants at that specific cursor ex) at 1, show cluster services
 		}
 	}
 	return k, nil
