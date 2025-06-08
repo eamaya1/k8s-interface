@@ -1,1 +1,3 @@
 k8s-interface.exe
+.env
+KUBECONFIG
